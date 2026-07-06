@@ -92,10 +92,12 @@ export async function POST(request: Request) {
     // Try knowledge base first
     const kbAnswer = findKnowledgeAnswer(message);
 
-    // Try OpenAI if available
-    const openAiKey = process.env.OPENAI_API_KEY;
+    // Try OpenRouter first, then OpenAI
+    const llmKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+    const llmBaseUrl = process.env.OPENROUTER_BASE_URL || "https://api.openai.com/v1";
+    const llmModel = process.env.OPENROUTER_MODEL || (process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "openai/gpt-4o-mini");
 
-    if (openAiKey) {
+    if (llmKey) {
       try {
         const systemPrompt = `Kamu adalah asisten kesehatan ginjal Indonesia bernama "HGM AI". 
 Gunakan bahasa Indonesia yang hangat dan mudah dipahami.
@@ -109,14 +111,18 @@ Aturan:
 
 ${context ? `Data pasien: ${JSON.stringify(context)}` : ""}`;
 
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        const res = await fetch(`${llmBaseUrl}/chat/completions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${openAiKey}`,
+            Authorization: `Bearer ${llmKey}`,
+            ...(process.env.OPENROUTER_API_KEY ? {
+              "HTTP-Referer": "https://hgm-blond.vercel.app",
+              "X-Title": "HGM - Hidup Ginjal Muda",
+            } : {}),
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: llmModel,
             messages: [
               { role: "system", content: systemPrompt },
               { role: "user", content: message },
@@ -130,10 +136,10 @@ ${context ? `Data pasien: ${JSON.stringify(context)}` : ""}`;
           const reply = data.choices?.[0]?.message?.content || kbAnswer || "Maaf, saya tidak bisa menjawab saat ini. Silakan konsultasi dengan dokter Anda.";
 
           await prisma.chatMessage.create({
-            data: { userId: session.userId, role: "assistant", content: reply, metadata: JSON.stringify({ model: "gpt-4o-mini", tokens: data.usage?.total_tokens }) },
+            data: { userId: session.userId, role: "assistant", content: reply, metadata: JSON.stringify({ model: llmModel, tokens: data.usage?.total_tokens }) },
           });
 
-          return NextResponse.json({ response: reply, model: "gpt-4o-mini" });
+          return NextResponse.json({ response: reply, model: llmModel });
         }
       } catch {
         // Fallback to knowledge base
