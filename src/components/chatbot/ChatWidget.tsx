@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle, X, Send, Lock } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 type ChatMsg = {
@@ -18,7 +19,7 @@ const quickReplies = [
 ];
 
 export function ChatWidget() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([
     { role: "assistant", content: "Halo! Saya asisten HGM. Ada yang bisa saya bantu tentang kesehatan ginjal Anda?" },
@@ -64,7 +65,7 @@ export function ChatWidget() {
     }
   };
 
-  if (!isLoaded || !user) return null;
+  if (!isLoaded) return null;
 
   return (
     <>
@@ -121,38 +122,43 @@ export function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Quick Replies */}
-          <div className="flex flex-wrap gap-1.5 px-4 pb-2">
-            {quickReplies.map((qr) => (
-              <button
-                key={qr}
-                onClick={() => sendMessage(qr)}
-                className="rounded-full border border-hgm-sapphire/20 px-2.5 py-1 text-xs text-hgm-sapphire hover:bg-hgm-sapphire/5"
-              >
-                {qr}
-              </button>
-            ))}
-          </div>
-
-          {/* Input */}
-          <div className="flex items-center gap-2 border-t border-hgm-sapphire/10 px-4 py-3">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-              placeholder="Tanya sesuatu..."
-              className="flex-1 rounded-lg border border-hgm-sapphire/20 px-3 py-2 text-sm focus:border-hgm-crimson focus:outline-none"
-              disabled={loading}
-            />
-            <button
-              onClick={() => sendMessage(input)}
-              disabled={loading || !input.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-hgm-crimson text-white disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
+          {isSignedIn ? (
+            <>
+              <div className="flex flex-wrap gap-1.5 px-4 pb-2">
+                {quickReplies.map((qr) => (
+                  <button
+                    key={qr}
+                    onClick={() => sendMessage(qr)}
+                    className="rounded-full border border-hgm-sapphire/20 px-2.5 py-1 text-xs text-hgm-sapphire hover:bg-hgm-sapphire/5"
+                  >
+                    {qr}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 border-t border-hgm-sapphire/10 px-4 py-3">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                  placeholder="Tanya sesuatu..."
+                  className="flex-1 rounded-lg border border-hgm-sapphire/20 px-3 py-2 text-sm focus:border-hgm-crimson focus:outline-none"
+                  disabled={loading}
+                />
+                <button
+                  onClick={() => sendMessage(input)}
+                  disabled={loading || !input.trim()}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-hgm-crimson text-white disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <Link href="/sign-in" className="flex items-center justify-center gap-2 border-t border-hgm-sapphire/10 px-4 py-4 text-sm font-medium text-hgm-crimson hover:underline">
+              <Lock className="h-4 w-4" /> Login untuk chat
+            </Link>
+          )}
         </div>
       )}
     </>

@@ -18,6 +18,7 @@ import {
 
 type DashboardContentProps = {
   role: string;
+  userId: string | null;
 };
 
 type HealthSummary = {
@@ -26,13 +27,16 @@ type HealthSummary = {
   therapyAdherence: { percentage: number | null };
 };
 
-export function DashboardContent({ role }: DashboardContentProps) {
+export function DashboardContent({ role, userId }: DashboardContentProps) {
   const { user, isLoaded } = useUser();
   const [summary, setSummary] = useState<HealthSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const signedIn = !!(userId ?? user?.id);
+
   useEffect(() => {
     if (!isLoaded) return;
+    if (!signedIn) { setLoading(false); return; }
     fetch("/api/daily-logs/summary?days=7")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setSummary(data))
@@ -127,7 +131,7 @@ export function DashboardContent({ role }: DashboardContentProps) {
         </div>
 
         {/* Health Summary */}
-        {role === "PATIENT" && (
+        {signedIn ? (
           <div className="mt-8 rounded-xl border border-hgm-sapphire/10 bg-white p-6">
             <div className="flex items-center gap-2">
               <Droplets className="h-5 w-5 text-hgm-crimson" />
@@ -180,6 +184,17 @@ export function DashboardContent({ role }: DashboardContentProps) {
                 Mulai isi <Link href="/dashboard/catatan-harian" className="text-hgm-crimson underline">Catatan Harian</Link> untuk melihat ringkasan kesehatan Anda.
               </p>
             )}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-xl border border-hgm-sapphire/10 bg-white p-6 text-center">
+            <Droplets className="mx-auto h-8 w-8 text-hgm-sapphire" />
+            <h2 className="mt-3 text-lg font-semibold text-hgm-sapphire">Ringkasan Kesehatan</h2>
+            <p className="mt-1 text-sm text-hgm-slate-grey">
+              Login untuk melihat ringkasan kesehatan pribadi Anda.
+            </p>
+            <Link href="/sign-in" className="mt-4 inline-block rounded-lg bg-hgm-crimson px-6 py-2 text-sm font-medium text-white hover:bg-hgm-crimson/90">
+              Login
+            </Link>
           </div>
         )}
       </div>

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 type DashboardHeaderProps = {
-  user: { name: string | null; email: string; role: string };
+  user: { name: string | null; email: string; role: string } | null;
   logoUrl?: string;
 };
 
@@ -24,7 +24,7 @@ export function DashboardHeader({ user, logoUrl }: DashboardHeaderProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isAdmin =
-    user.role === "SUPER_ADMIN" || user.role === "CONTENT_EDITOR";
+    user != null && (user.role === "SUPER_ADMIN" || user.role === "CONTENT_EDITOR");
 
   return (
     <header className="sticky top-0 z-50 border-b border-hgm-sapphire/10 bg-white">
@@ -66,14 +66,33 @@ export function DashboardHeader({ user, logoUrl }: DashboardHeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="hidden text-sm text-hgm-slate-grey md:block">
-            {user.name ?? user.email}
-          </span>
-          <UserButton
-            appearance={{
-              elements: { avatarBox: "h-8 w-8" },
-            }}
-          />
+          {user ? (
+            <>
+              <span className="hidden text-sm text-hgm-slate-grey md:block">
+                {user.name ?? user.email}
+              </span>
+              <UserButton
+                appearance={{
+                  elements: { avatarBox: "h-8 w-8" },
+                }}
+              />
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/sign-in"
+                className="rounded-lg border border-hgm-sapphire/20 px-3 py-1.5 text-sm font-medium text-hgm-sapphire hover:bg-gray-50"
+              >
+                Login
+              </Link>
+              <Link
+                href="/sign-up"
+                className="rounded-lg bg-hgm-crimson px-3 py-1.5 text-sm font-medium text-white hover:bg-hgm-crimson/90"
+              >
+                Daftar
+              </Link>
+            </div>
+          )}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-hgm-sapphire md:hidden"

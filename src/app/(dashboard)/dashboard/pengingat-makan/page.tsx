@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { DashboardHeader } from "../header";
+import { RequireAuth } from "@/components/RequireAuth";
 
 type MealReminder = {
   id: string;
@@ -38,7 +39,7 @@ const MEAL_ICONS: Record<string, string> = {
 };
 
 export default function PengingatMakanPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
 
   const [reminders, setReminders] = useState<MealReminder[]>([]);
@@ -68,9 +69,12 @@ export default function PengingatMakanPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) { router.push("/sign-in"); return; }
-    fetchData();
-  }, [isLoaded, user, router, fetchData]);
+    if (isSignedIn) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [isLoaded, isSignedIn, fetchData]);
 
   const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,16 +121,16 @@ export default function PengingatMakanPage() {
     finally { setSaving(false); }
   };
 
-  if (!isLoaded || !user) return null;
+  if (!isLoaded) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-hgm-cream">
       <DashboardHeader
-        user={{
+        user={user ? {
           name: user.fullName ?? user.emailAddresses[0]?.emailAddress ?? "",
           email: user.emailAddresses[0]?.emailAddress ?? "",
           role,
-        }}
+        } : null}
       />
       <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
@@ -148,6 +152,7 @@ export default function PengingatMakanPage() {
 
           {tab === "reminder" && (
             <>
+              <RequireAuth label="Login untuk mengatur pengingat makan">
               <form onSubmit={handleAddReminder} className="mt-6 rounded-xl border border-hgm-sapphire/10 bg-white p-6">
                 <h2 className="text-lg font-semibold text-hgm-sapphire">Tambah Pengingat</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -176,6 +181,7 @@ export default function PengingatMakanPage() {
                   {saving ? "Menyimpan..." : "Tambah Pengingat"}
                 </button>
               </form>
+              </RequireAuth>
 
               <div className="mt-6 space-y-3">
                 {loading ? (
@@ -204,6 +210,7 @@ export default function PengingatMakanPage() {
           )}
 
           {tab === "plan" && (
+            <RequireAuth label="Login untuk melihat rencana makan">
             <div className="mt-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-hgm-sapphire">
@@ -245,6 +252,7 @@ export default function PengingatMakanPage() {
                 </div>
               )}
             </div>
+            </RequireAuth>
           )}
         </div>
       </main>

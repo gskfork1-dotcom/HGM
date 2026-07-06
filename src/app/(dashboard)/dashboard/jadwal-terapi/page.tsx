@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { DashboardHeader } from "../header";
+import { RequireAuth } from "@/components/RequireAuth";
 
 type TherapySchedule = {
   id: string;
@@ -52,7 +53,7 @@ const THERAPY_LABELS: Record<string, string> = {
 };
 
 export default function JadwalTerapiPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const [schedules, setSchedules] = useState<TherapySchedule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,12 +91,12 @@ export default function JadwalTerapiPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) {
-      router.push("/sign-in");
-      return;
+    if (isSignedIn) {
+      fetchSchedules();
+    } else {
+      setLoading(false);
     }
-    fetchSchedules();
-  }, [isLoaded, user, router, fetchSchedules]);
+  }, [isLoaded, isSignedIn, fetchSchedules]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,16 +217,16 @@ export default function JadwalTerapiPage() {
     (s) => s.startTime < today
   );
 
-  if (!isLoaded || !user) return null;
+  if (!isLoaded) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-hgm-cream">
       <DashboardHeader
-        user={{
+        user={user ? {
           name: user.fullName ?? user.emailAddresses[0]?.emailAddress ?? "",
           email: user.emailAddresses[0]?.emailAddress ?? "",
           role,
-        }}
+        } : null}
       />
       <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
@@ -234,6 +235,7 @@ export default function JadwalTerapiPage() {
             Kelola jadwal hemodialisis, CAPD, konsultasi, dan cek laboratorium.
           </p>
 
+          <RequireAuth label="Login untuk mengelola jadwal terapi">
           <form onSubmit={handleSubmit} className="mt-8 rounded-xl border border-hgm-sapphire/10 bg-white p-6">
             <h2 className="text-lg font-semibold text-hgm-sapphire">
               {editingId ? "Edit Jadwal" : "Tambah Jadwal"}
@@ -375,6 +377,7 @@ export default function JadwalTerapiPage() {
               )}
             </div>
           </form>
+          </RequireAuth>
 
           {/* Check-in Modal */}
           {showCheckin && (

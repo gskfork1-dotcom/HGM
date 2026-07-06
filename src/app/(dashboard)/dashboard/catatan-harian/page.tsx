@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { DashboardHeader } from "../header";
+import { RequireAuth } from "@/components/RequireAuth";
 
 type DailyLog = {
   id: string;
@@ -39,7 +40,7 @@ const emptyForm = {
 };
 
 export default function CatatanHarianPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,13 +82,13 @@ export default function CatatanHarianPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) {
-      router.push("/sign-in");
-      return;
+    if (isSignedIn) {
+      fetchLogs();
+      fetchSummary();
+    } else {
+      setLoading(false);
     }
-    fetchLogs();
-    fetchSummary();
-  }, [isLoaded, user, router, fetchLogs, fetchSummary]);
+  }, [isLoaded, isSignedIn, fetchLogs, fetchSummary]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,16 +177,16 @@ export default function CatatanHarianPage() {
     setEditingId(null);
   };
 
-  if (!isLoaded || !user) return null;
+  if (!isLoaded) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-hgm-cream">
       <DashboardHeader
-        user={{
+        user={user ? {
           name: user.fullName ?? user.emailAddresses[0]?.emailAddress ?? "",
           email: user.emailAddresses[0]?.emailAddress ?? "",
           role,
-        }}
+        } : null}
       />
       <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
@@ -223,6 +224,7 @@ export default function CatatanHarianPage() {
             </div>
           )}
 
+          <RequireAuth label="Login untuk mencatat data harian">
           <form onSubmit={handleSubmit} className="mt-8 rounded-xl border border-hgm-sapphire/10 bg-white p-6">
             <h2 className="text-lg font-semibold text-hgm-sapphire">
               {editingId ? "Edit Catatan" : "Catatan Baru"}
@@ -395,6 +397,7 @@ export default function CatatanHarianPage() {
               )}
             </div>
           </form>
+          </RequireAuth>
 
           <div className="mt-8">
             <h2 className="text-lg font-semibold text-hgm-sapphire">Riwayat Catatan</h2>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { DashboardHeader } from "../header";
+import { RequireAuth } from "@/components/RequireAuth";
 
 type KtVCalc = {
   id: string;
@@ -15,7 +16,7 @@ type KtVCalc = {
 };
 
 export default function KalkulatorKtvPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
 
   const [mode, setMode] = useState<"lengkap" | "kasar">("kasar");
@@ -52,9 +53,10 @@ export default function KalkulatorKtvPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) { router.push("/sign-in"); return; }
-    fetchHistory();
-  }, [isLoaded, user, router, fetchHistory]);
+    if (isSignedIn) {
+      fetchHistory();
+    }
+  }, [isLoaded, isSignedIn, fetchHistory]);
 
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +115,7 @@ export default function KalkulatorKtvPage() {
     }
   };
 
-  if (!isLoaded || !user) return null;
+  if (!isLoaded) return null;
 
   const statusColor: Record<string, string> = {
     optimal: "bg-green-100 text-green-700 border-green-300",
@@ -124,11 +126,11 @@ export default function KalkulatorKtvPage() {
   return (
     <div className="flex min-h-screen flex-col bg-hgm-cream">
       <DashboardHeader
-        user={{
+        user={user ? {
           name: user.fullName ?? user.emailAddresses[0]?.emailAddress ?? "",
           email: user.emailAddresses[0]?.emailAddress ?? "",
           role,
-        }}
+        } : null}
       />
       <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
@@ -137,6 +139,7 @@ export default function KalkulatorKtvPage() {
             Hitung estimasi kecukupan dialisis Anda.
           </p>
 
+          <RequireAuth label="Login untuk menghitung Kt/V">
           <form onSubmit={handleCalculate} className="mt-6 rounded-xl border border-hgm-sapphire/10 bg-white p-6">
             <div className="flex gap-4">
               <button type="button" onClick={() => setMode("kasar")}
@@ -258,6 +261,7 @@ export default function KalkulatorKtvPage() {
               {saving ? "Menghitung..." : "Hitung Kt/V"}
             </button>
           </form>
+          </RequireAuth>
 
           {result && (
             <div className={`mt-6 rounded-xl border-2 p-6 ${statusColor[result.status]}`}>

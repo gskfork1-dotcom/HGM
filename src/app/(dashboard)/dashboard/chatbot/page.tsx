@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { DashboardHeader } from "../header";
+import { RequireAuth } from "@/components/RequireAuth";
 import { Send, Bot, User, AlertTriangle, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
@@ -24,7 +25,7 @@ const suggestions = [
 ];
 
 export default function ChatbotPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([
@@ -50,9 +51,10 @@ export default function ChatbotPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) { router.push("/sign-in"); return; }
-    fetchHistory();
-  }, [isLoaded, user, router, fetchHistory]);
+    if (isSignedIn) {
+      fetchHistory();
+    }
+  }, [isLoaded, isSignedIn, fetchHistory]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
@@ -83,16 +85,16 @@ export default function ChatbotPage() {
     }
   };
 
-  if (!isLoaded || !user) return null;
+  if (!isLoaded) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-hgm-cream">
       <DashboardHeader
-        user={{
+        user={user ? {
           name: user.fullName ?? user.emailAddresses[0]?.emailAddress ?? "",
           email: user.emailAddresses[0]?.emailAddress ?? "",
           role,
-        }}
+        } : null}
       />
       <main className="flex flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-5xl gap-6">
@@ -200,6 +202,7 @@ export default function ChatbotPage() {
               <div ref={bottomRef} />
             </div>
 
+            <RequireAuth label="Login untuk chat dengan HGM AI">
             {/* Suggestions */}
             <div className="flex flex-wrap gap-2 border-t border-hgm-sapphire/10 px-6 py-3">
               {suggestions.map((s, i) => (
@@ -232,6 +235,7 @@ export default function ChatbotPage() {
                 <Send className="h-5 w-5" />
               </button>
             </div>
+            </RequireAuth>
           </div>
         </div>
       </main>
