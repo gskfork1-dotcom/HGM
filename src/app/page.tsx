@@ -88,6 +88,55 @@ export default async function Home() {
           </div>
         </section>
 
+        <section className="bg-hgm-cream py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 className="text-center text-3xl font-bold text-hgm-sapphire">
+              Alat Interaktif
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-hgm-slate-grey">
+              Coba kalkulator dan alat bantu terapi ginjal secara gratis.
+            </p>
+            <div className="mt-12 grid gap-8 md:grid-cols-3">
+              <Link
+                href="/dashboard/kalkulator-ktv"
+                className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-hgm-crimson/30"
+              >
+                <h3 className="text-lg font-semibold text-hgm-crimson">Kalkulator Kt/V</h3>
+                <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
+                  Hitung adequacy dialisis Anda dengan kalkulator Kt/V berbasis standar medis.
+                </p>
+                <span className="mt-3 inline-block text-sm font-medium text-hgm-sapphire group-hover:text-hgm-crimson">
+                  Coba Sekarang &rarr;
+                </span>
+              </Link>
+              <Link
+                href="/dashboard/pengingat-makan"
+                className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-hgm-crimson/30"
+              >
+                <h3 className="text-lg font-semibold text-hgm-crimson">Pengingat Makan</h3>
+                <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
+                  Atur jadwal makan dan pantau asupan nutrisi harian Anda.
+                </p>
+                <span className="mt-3 inline-block text-sm font-medium text-hgm-sapphire group-hover:text-hgm-crimson">
+                  Coba Sekarang &rarr;
+                </span>
+              </Link>
+              <Link
+                href="/dashboard/chatbot"
+                className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-hgm-crimson/30"
+              >
+                <h3 className="text-lg font-semibold text-hgm-crimson">Chatbot AI</h3>
+                <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
+                  Tanya jawab seputar terapi ginjal dengan asisten AI.
+                </p>
+                <span className="mt-3 inline-block text-sm font-medium text-hgm-sapphire group-hover:text-hgm-crimson">
+                  Coba Sekarang &rarr;
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className="bg-white py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-center text-3xl font-bold text-hgm-sapphire">
