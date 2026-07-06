@@ -2,6 +2,16 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import {
+  Activity,
+  Calendar,
+  BookOpen,
+  Calculator,
+  Utensils,
+  MessageCircle,
+  MessageSquare,
+  Newspaper,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -91,48 +101,68 @@ export default async function Home() {
         <section className="bg-hgm-cream py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-center text-3xl font-bold text-hgm-sapphire">
-              Alat Interaktif
+              Semua Fitur HGM
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-center text-hgm-slate-grey">
-              Coba kalkulator dan alat bantu terapi ginjal secara gratis.
+              Platform lengkap untuk pasien ginjal — akses semua alat dan informasi dari satu tempat.
             </p>
-            <div className="mt-12 grid gap-8 md:grid-cols-3">
-              <Link
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <FeatureCard
+                href="/dashboard/catatan-harian"
+                icon={<Activity className="h-6 w-6" />}
+                title="Catatan Harian"
+                desc="Catat dan pantau perkembangan terapi harian Anda."
+                cta="Buka Catatan"
+              />
+              <FeatureCard
+                href="/dashboard/jadwal-terapi"
+                icon={<Calendar className="h-6 w-6" />}
+                title="Jadwal Terapi"
+                desc="Lihat dan kelola jadwal hemodialisis atau CAPD."
+                cta="Buka Jadwal"
+              />
+              <FeatureCard
                 href="/dashboard/kalkulator-ktv"
-                className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-hgm-crimson/30"
-              >
-                <h3 className="text-lg font-semibold text-hgm-crimson">Kalkulator Kt/V</h3>
-                <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
-                  Hitung adequacy dialisis Anda dengan kalkulator Kt/V berbasis standar medis.
-                </p>
-                <span className="mt-3 inline-block text-sm font-medium text-hgm-sapphire group-hover:text-hgm-crimson">
-                  Coba Sekarang &rarr;
-                </span>
-              </Link>
-              <Link
+                icon={<Calculator className="h-6 w-6" />}
+                title="Kalkulator Kt/V"
+                desc="Hitung dosis dialisis dengan metode Daugirdas."
+                cta="Hitung Kt/V"
+              />
+              <FeatureCard
                 href="/dashboard/pengingat-makan"
-                className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-hgm-crimson/30"
-              >
-                <h3 className="text-lg font-semibold text-hgm-crimson">Pengingat Makan</h3>
-                <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
-                  Atur jadwal makan dan pantau asupan nutrisi harian Anda.
-                </p>
-                <span className="mt-3 inline-block text-sm font-medium text-hgm-sapphire group-hover:text-hgm-crimson">
-                  Coba Sekarang &rarr;
-                </span>
-              </Link>
-              <Link
+                icon={<Utensils className="h-6 w-6" />}
+                title="Pengingat Makan"
+                desc="Atur pengingat makan & rencana menu harian ginjal."
+                cta="Atur Menu"
+              />
+              <FeatureCard
                 href="/dashboard/chatbot"
-                className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:border-hgm-crimson/30"
-              >
-                <h3 className="text-lg font-semibold text-hgm-crimson">Chatbot AI</h3>
-                <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
-                  Tanya jawab seputar terapi ginjal dengan asisten AI.
-                </p>
-                <span className="mt-3 inline-block text-sm font-medium text-hgm-sapphire group-hover:text-hgm-crimson">
-                  Coba Sekarang &rarr;
-                </span>
-              </Link>
+                icon={<MessageCircle className="h-6 w-6" />}
+                title="HGM AI Chatbot"
+                desc="Tanya apa pun tentang kesehatan ginjal."
+                cta="Mulai Chat"
+              />
+              <FeatureCard
+                href="/academy"
+                icon={<BookOpen className="h-6 w-6" />}
+                title="Artikel Edukasi"
+                desc="Baca artikel dan panduan dari tenaga medis."
+                cta="Baca Artikel"
+              />
+              <FeatureCard
+                href="/forum"
+                icon={<MessageSquare className="h-6 w-6" />}
+                title="Forum Diskusi"
+                desc="Diskusi dengan sesama pasien dan caregiver."
+                cta="Gabung Forum"
+              />
+              <FeatureCard
+                href="/berita"
+                icon={<Newspaper className="h-6 w-6" />}
+                title="Berita Ginjal"
+                desc="Update penelitian, kebijakan, dan tips terbaru."
+                cta="Lihat Berita"
+              />
             </div>
           </div>
         </section>
@@ -181,5 +211,34 @@ export default async function Home() {
       </main>
       <Footer />
     </>
+  );
+}
+
+function FeatureCard({
+  href,
+  icon,
+  title,
+  desc,
+  cta,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  cta: string;
+}) {
+  return (
+    <Link href={href}>
+      <div className="group rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-hgm-crimson/30">
+        <div className="text-hgm-crimson">{icon}</div>
+        <h3 className="mt-3 font-semibold text-hgm-sapphire transition-colors group-hover:text-hgm-crimson">
+          {title}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">{desc}</p>
+        <span className="mt-3 inline-block text-sm font-medium text-hgm-crimson">
+          {cta} &rarr;
+        </span>
+      </div>
+    </Link>
   );
 }
