@@ -1,65 +1,136 @@
-import Image from "next/image";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const config = await prisma.appConfiguration.findUnique({
+    where: { id: "global_config" },
+  });
+
+  const heroTitle =
+    config?.landingHeroTitle ??
+    "Hidup Ginjal Muda: Jalani Terapi dengan Jiwa Muda";
+  const heroSubtitle =
+    config?.landingHeroSub ??
+    "Platform premium pendamping Hemodialisis & CAPD";
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <Header />
+      <main className="flex-1">
+        <section className="relative overflow-hidden bg-gradient-to-br from-hgm-dark-bg via-hgm-dark-bg to-hgm-sapphire">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-hgm-sapphire/30 via-transparent to-transparent" />
+          <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                {heroTitle}
+              </h1>
+              <p className="mt-6 text-lg leading-8 text-hgm-slate-grey sm:text-xl">
+                {heroSubtitle}
+              </p>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link
+                  href="/sign-up"
+                  className="rounded-lg bg-hgm-crimson px-6 py-3 text-base font-semibold text-white shadow-lg shadow-hgm-crimson/30 transition-all hover:bg-hgm-crimson/90 hover:shadow-xl hover:shadow-hgm-crimson/40"
+                >
+                  Mulai Sekarang
+                </Link>
+                <Link
+                  href="/academy"
+                  className="rounded-lg border border-white/20 px-6 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
+                >
+                  Jelajahi Academy
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-hgm-cream py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 className="text-center text-3xl font-bold text-hgm-sapphire">
+              Kenapa HGM?
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-hgm-slate-grey">
+              Platform terintegrasi untuk pasien ginjal, caregiver, dan tenaga medis.
+            </p>
+            <div className="mt-12 grid gap-8 md:grid-cols-3">
+              {[
+                {
+                  title: "Monitoring Mandiri",
+                  desc: "Catat dan pantau perkembangan terapi harian Anda secara real-time.",
+                },
+                {
+                  title: "Edukasi Terpercaya",
+                  desc: "Akses artikel dan video edukasi dari tenaga medis profesional.",
+                },
+                {
+                  title: "Komunitas Supportif",
+                  desc: "Terhubung dengan sesama pejuang ginjal dan caregiver.",
+                },
+              ].map((feature) => (
+                <div
+                  key={feature.title}
+                  className="rounded-xl border border-hgm-sapphire/10 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <h3 className="text-lg font-semibold text-hgm-crimson">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-hgm-slate-grey">
+                    {feature.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 className="text-center text-3xl font-bold text-hgm-sapphire">
+              Testimoni
+            </h2>
+            <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  name: "Siti Rahmawati",
+                  role: "Pasien HD",
+                  text: "HGM membantu saya mencatat jadwal hemodialisis dengan mudah. Sangat membantu!",
+                },
+                {
+                  name: "Dr. Andi Pratama",
+                  role: "Nefrolog",
+                  text: "Platform ini memudahkan saya memantau perkembangan pasien dari jarak jauh.",
+                },
+                {
+                  name: "Budi Santoso",
+                  role: "Caregiver",
+                  text: "Sebagai caregiver, HGM memberi saya panduan merawat anggota keluarga di rumah.",
+                },
+              ].map((t) => (
+                <div
+                  key={t.name}
+                  className="rounded-xl border border-hgm-sapphire/10 bg-hgm-cream p-6"
+                >
+                  <p className="text-sm italic leading-6 text-hgm-slate-grey">
+                    &ldquo;{t.text}&rdquo;
+                  </p>
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold text-hgm-sapphire">
+                      {t.name}
+                    </p>
+                    <p className="text-xs text-hgm-slate-grey">{t.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
-    </div>
+      <Footer />
+    </>
   );
 }

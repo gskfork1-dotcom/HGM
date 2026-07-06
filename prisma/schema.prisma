@@ -1,0 +1,408 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  PATIENT
+  CAREGIVER
+  CONTENT_EDITOR
+  SUPER_ADMIN
+}
+
+enum TherapyType {
+  HEMODIALYSIS
+  CAPD
+  DOCTOR_CONSULT
+  LAB_CHECK
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  name      String?
+  role      UserRole @default(PATIENT)
+  createdAt DateTime @default(now())
+
+  authoredArticles        AcademyArticle[]
+  configUpdates           AppConfiguration[]
+  dailyLogs               DailyLog[]
+  dailyLogsRecorded       DailyLog[]         @relation("RecordedBy")
+  therapySchedules        TherapySchedule[]  @relation("SchedulePatient")
+  therapySchedulesCreated TherapySchedule[]  @relation("ScheduleCreator")
+  therapySessions         TherapySession[]
+  therapyConfirmed        TherapySession[]   @relation("ConfirmedBy")
+  medications             Medication[]       @relation("MedicationPatient")
+  medicationsCreated      Medication[]       @relation("MedicationCreator")
+  medicationLogs          MedicationLog[]    @relation("MedLogPatient")
+  medicationLogsRec       MedicationLog[]    @relation("MedLogRecorder")
+  labResults              LabResult[]        @relation("LabPatient")
+  labResultsRec           LabResult[]        @relation("LabRecorder")
+  foodDiaries             FoodDiary[]        @relation("FoodDiaryPatient")
+  foodDiariesRec          FoodDiary[]        @relation("FoodDiaryRecorder")
+  notifications           Notification[]
+}
+
+model AppConfiguration {
+  id               String   @id @default("global_config")
+  logoUrl          String   @default("/assets/logo-default.svg")
+  landingHeroTitle String   @default("Hidup Ginjal Muda: Jalani Terapi dengan Jiwa Muda")
+  landingHeroSub   String   @default("Platform premium pendamping Hemodialisis & CAPD")
+  updatedAt        DateTime @updatedAt
+  updatedByUserId  String
+  updatedBy        User     @relation(fields: [updatedByUserId], references: [id])
+}
+
+model AcademyArticle {
+  id          String   @id @default(uuid())
+  title       String
+  category    String
+  htmlBody    String
+  isPublished Boolean  @default(false)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DailyLog {
+  id               String   @id @default(cuid())
+  patientId        String
+  patient          User     @relation(fields: [patientId], references: [id])
+  entryDate        DateTime
+  systolicBP       Int?
+  diastolicBP      Int?
+  weight           Float?
+  fluidIntake      Int?
+  urineOutput      Int?
+  temperature      Float?
+  bloodSugar       Int?
+  symptoms         String?
+  mood             Int?
+  sleepDuration    Float?
+  therapyAdherence Boolean?
+  notes            String?
+  recordedById     String
+  recordedBy       User     @relation(fields: [recordedById], references: [id], name: "RecordedBy")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([patientId, entryDate])
+}
+
+model TherapySchedule {
+  id              String      @id @default(cuid())
+  patientId       String
+  patient         User        @relation(fields: [patientId], references: [id], name: "SchedulePatient")
+  therapyType     TherapyType
+  title           String?
+  location        String?
+  notes           String?
+  isRecurring     Boolean     @default(false)
+  recurringRule   String?
+  startTime       DateTime
+  endTime         DateTime?
+  durationMinutes Int?
+  isActive        Boolean     @default(true)
+  createdById     String
+  createdBy       User        @relation(fields: [createdById], references: [id], name: "ScheduleCreator")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  sessions TherapySession[]
+
+  @@index([patientId, startTime])
+}
+
+model TherapySession {
+  id              String          @id @default(cuid())
+  scheduleId      String
+  schedule        TherapySchedule @relation(fields: [scheduleId], references: [id])
+  patientId       String
+  patient         User            @relation(fields: [patientId], references: [id])
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+  completed       Boolean         @default(false)
+  skipped         Boolean         @default(false)
+  skipReason      String?
+  preWeight       Float?
+  postWeight      Float?
+  preBP           String?
+  postBP          String?
+  symptoms        String?
+  attendantName   String?
+  location        String?
+  notes           String?
+  confirmedById   String?
+  confirmedBy     User?           @relation(fields: [confirmedById], references: [id], name: "ConfirmedBy")
+  createdAt       DateTime        @default(now())
+
+  @@index([patientId, scheduleId])
+}
+
+model Medication {
+  id           String   @id @default(cuid())
+  patientId    String
+  patient      User     @relation(fields: [patientId], references: [id], name: "MedicationPatient")
+  name         String
+  category     String?
+  dosage       String
+  frequency    String
+  times        String // JSON array: ["06:00","18:00"]
+  withFood     Boolean  @default(false)
+  notes        String?
+  currentStock Int?
+  stockAlertAt Int?
+  isActive     Boolean  @default(true)
+  createdById  String
+  createdBy    User     @relation(fields: [createdById], references: [id], name: "MedicationCreator")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  logs MedicationLog[]
+
+  @@index([patientId])
+}
+
+model MedicationLog {
+  id            String     @id @default(cuid())
+  medicationId  String
+  medication    Medication @relation(fields: [medicationId], references: [id])
+  patientId     String
+  patient       User       @relation(fields: [patientId], references: [id], name: "MedLogPatient")
+  takenAt       DateTime
+  taken         Boolean    @default(true)
+  skippedReason String?
+  notes         String?
+  recordedById  String
+  recordedBy    User       @relation(fields: [recordedById], references: [id], name: "MedLogRecorder")
+  createdAt     DateTime   @default(now())
+
+  @@index([medicationId, takenAt])
+}
+
+model LabResult {
+  id           String   @id @default(cuid())
+  patientId    String
+  patient      User     @relation(fields: [patientId], references: [id], name: "LabPatient")
+  testDate     DateTime
+  labName      String?
+  notes        String?
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id], name: "LabRecorder")
+  createdAt    DateTime @default(now())
+
+  parameters LabParameter[]
+
+  @@index([patientId, testDate])
+}
+
+model LabParameter {
+  id          String    @id @default(cuid())
+  labResultId String
+  labResult   LabResult @relation(fields: [labResultId], references: [id])
+  name        String
+  value       Float
+  unit        String
+  normalMin   Float?
+  normalMax   Float?
+  isCritical  Boolean?
+  createdAt   DateTime  @default(now())
+
+  @@index([labResultId])
+}
+
+model FoodItem {
+  id              String      @id @default(cuid())
+  name            String
+  category        String?
+  servingSize     String?
+  calories        Int?
+  protein         Float?
+  sodium          Int?
+  potassium       Int?
+  phosphorus      Int?
+  fluid           Int?
+  isSafeForKidney String? // safe, caution, avoid
+  imageUrl        String?
+  createdAt       DateTime    @default(now())
+  foodDiaries     FoodDiary[]
+}
+
+model FoodDiary {
+  id           String   @id @default(cuid())
+  patientId    String
+  patient      User     @relation(fields: [patientId], references: [id], name: "FoodDiaryPatient")
+  entryDate    DateTime
+  mealTime     String // breakfast, lunch, dinner, snack
+  foodItemId   String
+  foodItem     FoodItem @relation(fields: [foodItemId], references: [id])
+  portion      Float
+  notes        String?
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id], name: "FoodDiaryRecorder")
+  createdAt    DateTime @default(now())
+
+  @@index([patientId, entryDate])
+}
+
+model ForumCategory {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  description  String?
+  order        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  forumThreads ForumThread[]
+}
+
+model ForumThread {
+  id          String        @id @default(cuid())
+  categoryId  String
+  category    ForumCategory @relation(fields: [categoryId], references: [id])
+  title       String
+  content     String
+  authorId    String
+  isAnonymous Boolean       @default(false)
+  isPinned    Boolean       @default(false)
+  isLocked    Boolean       @default(false)
+  viewCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  replies ForumReply[]
+}
+
+model ForumReply {
+  id           String      @id @default(cuid())
+  threadId     String
+  thread       ForumThread @relation(fields: [threadId], references: [id])
+  content      String
+  authorId     String
+  isAnonymous  Boolean     @default(false)
+  isBestAnswer Boolean     @default(false)
+  upvoteCount  Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([threadId])
+}
+
+model AcademyVideo {
+  id           String       @id @default(cuid())
+  title        String
+  description  String?
+  url          String
+  thumbnailUrl String?
+  duration     Int?
+  category     String
+  isPublished  Boolean      @default(false)
+  authorId     String
+  seriesId     String?
+  series       VideoSeries? @relation(fields: [seriesId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model VideoSeries {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  videos AcademyVideo[]
+}
+
+model MythFact {
+  id          String   @id @default(cuid())
+  statement   String
+  isMyth      Boolean
+  explanation String
+  source      String?
+  imageUrl    String?
+  category    String?
+  isPublished Boolean  @default(false)
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DialysisClinic {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  province    String
+  phone       String?
+  latitude    Float?
+  longitude   Float?
+  hasHD       Boolean  @default(false)
+  hasCAPD     Boolean  @default(false)
+  acceptsBPJS Boolean  @default(true)
+  is24Hours   Boolean  @default(false)
+  facilities  String?
+  rating      Float?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([city])
+}
+
+model Notification {
+  id      String    @id @default(cuid())
+  userId  String
+  user    User      @relation(fields: [userId], references: [id])
+  type    String
+  title   String
+  body    String?
+  data    String?
+  isRead  Boolean   @default(false)
+  channel String    @default("push")
+  sentAt  DateTime  @default(now())
+  readAt  DateTime?
+
+  @@index([userId, isRead])
+  @@index([userId, sentAt])
+}
+
+model TransplantTracker {
+  id               String    @id @default(cuid())
+  patientId        String    @unique
+  status           String // pre-transplant, waiting-list, post-transplant
+  transplantDate   DateTime?
+  hospital         String?
+  donorType        String?
+  bloodTypeMatch   String?
+  crossMatchResult String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model EmergencyContact {
+  id        String   @id @default(cuid())
+  patientId String
+  name      String
+  relation  String
+  phone     String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PatientMedicalInfo {
+  id                 String   @id @default(cuid())
+  patientId          String   @unique
+  bloodType          String?
+  rhesus             String?
+  diagnosis          String?
+  allergies          String?
+  comorbidities      String?
+  medicationsSummary String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
