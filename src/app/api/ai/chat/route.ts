@@ -55,9 +55,7 @@ function isEmergency(message: string): boolean {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = session?.userId ?? null;
 
   try {
     const { message, context } = await request.json();
@@ -65,27 +63,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Pesan diperlukan" }, { status: 400 });
     }
 
-    // Save user message
-    await prisma.chatMessage.create({
-      data: {
-        userId: session.userId,
-        role: "user",
-        content: message,
-        context: context ? JSON.stringify(context) : null,
-        isEmergency: isEmergency(message),
-      },
-    });
+    // Save user message (only if logged in)
+    if (userId) {
+      await prisma.chatMessage.create({
+        data: {
+          userId,
+          role: "user",
+          content: message,
+          context: context ? JSON.stringify(context) : null,
+          isEmergency: isEmergency(message),
+        },
+      });
+    }
 
     // Emergency detection
     if (isEmergency(message)) {
-      await prisma.chatMessage.create({
-        data: {
-          userId: session.userId,
-          role: "assistant",
-          content: emergencyResponse,
-          isEmergency: true,
-        },
-      });
+      if (userId) {
+        await prisma.chatMessage.create({
+          data: { userId, role: "assistant", content: emergencyResponse, isEmergency: true },
+        });
+      }
       return NextResponse.json({ response: emergencyResponse, isEmergency: true });
     }
 
@@ -135,9 +132,11 @@ ${context ? `Data pasien: ${JSON.stringify(context)}` : ""}`;
           const data = await res.json();
           const reply = data.choices?.[0]?.message?.content || kbAnswer || "Maaf, saya tidak bisa menjawab saat ini. Silakan konsultasi dengan dokter Anda.";
 
-          await prisma.chatMessage.create({
-            data: { userId: session.userId, role: "assistant", content: reply, metadata: JSON.stringify({ model: llmModel, tokens: data.usage?.total_tokens }) },
-          });
+          if (userId) {
+            await prisma.chatMessage.create({
+              data: { userId, role: "assistant", content: reply, metadata: JSON.stringify({ model: llmModel, tokens: data.usage?.total_tokens }) },
+            });
+          }
 
           return NextResponse.json({ response: reply, model: llmModel });
         }
@@ -149,9 +148,11 @@ ${context ? `Data pasien: ${JSON.stringify(context)}` : ""}`;
     // Knowledge base / fallback response
     const reply = kbAnswer || "Maaf, saya belum bisa menjawab pertanyaan itu. Silakan tanyakan ke dokter atau tim medis Anda, atau baca artikel di HGM Academy untuk informasi lebih lanjut.";
 
-    await prisma.chatMessage.create({
-      data: { userId: session.userId, role: "assistant", content: reply },
-    });
+    if (userId) {
+      await prisma.chatMessage.create({
+        data: { userId, role: "assistant", content: reply },
+      });
+    }
 
     return NextResponse.json({ response: reply, model: "knowledge-base" });
   } catch {
