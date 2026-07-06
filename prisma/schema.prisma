@@ -45,6 +45,11 @@ model User {
   foodDiaries             FoodDiary[]        @relation("FoodDiaryPatient")
   foodDiariesRec          FoodDiary[]        @relation("FoodDiaryRecorder")
   notifications           Notification[]
+  ktvCalculations         KtVCalculation[]
+  mealReminders           MealReminder[]
+  mealPlans               DailyMealPlan[]
+  chatMessages            ChatMessage[]
+  aiConversations         AiConversation[]
 }
 
 model AppConfiguration {
@@ -217,7 +222,7 @@ model LabParameter {
 }
 
 model FoodItem {
-  id              String      @id @default(cuid())
+  id              String          @id @default(cuid())
   name            String
   category        String?
   servingSize     String?
@@ -229,8 +234,9 @@ model FoodItem {
   fluid           Int?
   isSafeForKidney String? // safe, caution, avoid
   imageUrl        String?
-  createdAt       DateTime    @default(now())
+  createdAt       DateTime        @default(now())
   foodDiaries     FoodDiary[]
+  dailyMealPlans  DailyMealPlan[]
 }
 
 model FoodDiary {
@@ -405,4 +411,92 @@ model PatientMedicalInfo {
   medicationsSummary String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model KtVCalculation {
+  id              String   @id @default(cuid())
+  patientId       String
+  patient         User     @relation(fields: [patientId], references: [id])
+  calculationDate DateTime @default(now())
+  mode            String // "lengkap" or "kasar"
+
+  bunPre  Float?
+  bunPost Float?
+  qb      Int?
+  qd      Int?
+
+  durationHours Float
+  weightPre     Float?
+  weightPost    Float
+  uf            Float?
+  age           Int?
+  height        Int?
+  gender        String? // L/P
+
+  ktvResult Float
+  status    String // optimal, adequate, inadequate
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId, calculationDate])
+}
+
+model MealReminder {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   User     @relation(fields: [patientId], references: [id])
+  mealTime  String // breakfast, lunch, dinner, snack1, snack2
+  time      String // HH:mm
+  isActive  Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+}
+
+model DailyMealPlan {
+  id          String    @id @default(cuid())
+  patientId   String
+  patient     User      @relation(fields: [patientId], references: [id])
+  planDate    DateTime
+  mealTime    String // breakfast, lunch, dinner, snack
+  foodItemId  String?
+  foodItem    FoodItem? @relation(fields: [foodItemId], references: [id])
+  suggestion  String?
+  isGenerated Boolean   @default(false)
+  isConsumed  Boolean?
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([patientId, planDate])
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  role        String // "user" or "assistant"
+  content     String
+  context     String? // JSON data context
+  hasData     Boolean  @default(false)
+  metadata    String? // JSON: tokens, model, latency
+  isEmergency Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model AiConversation {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  threadId     String?
+  title        String?
+  messageCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
 }

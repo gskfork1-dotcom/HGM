@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 type DashboardHeaderProps = {
   user: { name: string | null; email: string; role: string };
@@ -13,10 +15,14 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/catatan-harian", label: "Catatan Harian" },
   { href: "/dashboard/jadwal-terapi", label: "Jadwal Terapi" },
+  { href: "/dashboard/kalkulator-ktv", label: "Kalkulator Kt/V" },
+  { href: "/dashboard/pengingat-makan", label: "Pengingat Makan" },
+  { href: "/dashboard/chatbot", label: "Chatbot" },
 ];
 
 export function DashboardHeader({ user, logoUrl }: DashboardHeaderProps) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isAdmin =
     user.role === "SUPER_ADMIN" || user.role === "CONTENT_EDITOR";
 
@@ -68,8 +74,44 @@ export function DashboardHeader({ user, logoUrl }: DashboardHeaderProps) {
               elements: { avatarBox: "h-8 w-8" },
             }}
           />
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-hgm-sapphire md:hidden"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
+      {mobileOpen && (
+        <div className="border-t border-hgm-sapphire/10 bg-white px-4 pb-4 md:hidden">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`block rounded-lg px-3 py-2 text-sm font-medium ${
+                  isActive
+                    ? "bg-hgm-crimson/10 text-hgm-crimson"
+                    : "text-hgm-sapphire hover:text-hgm-crimson"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-lg px-3 py-2 text-sm font-medium text-hgm-sapphire hover:text-hgm-crimson"
+            >
+              Admin Panel
+            </Link>
+          )}
+        </div>
+      )}
     </header>
   );
 }

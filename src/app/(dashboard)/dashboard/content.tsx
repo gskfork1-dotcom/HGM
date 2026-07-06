@@ -11,6 +11,9 @@ import {
   Droplets,
   Weight,
   TrendingUp,
+  Calculator,
+  Utensils,
+  MessageCircle,
 } from "lucide-react";
 
 type DashboardContentProps = {
@@ -92,6 +95,27 @@ export function DashboardContent({ role }: DashboardContentProps) {
             title="Jadwal Terapi"
             desc="Lihat dan kelola jadwal hemodialisis atau CAPD."
             cta="Buka Jadwal"
+          />
+          <FeatureCard
+            href="/dashboard/kalkulator-ktv"
+            icon={<Calculator className="h-6 w-6" />}
+            title="Kalkulator Kt/V"
+            desc="Hitung dosis dialisis dengan metode Daugirdas."
+            cta="Hitung Kt/V"
+          />
+          <FeatureCard
+            href="/dashboard/pengingat-makan"
+            icon={<Utensils className="h-6 w-6" />}
+            title="Pengingat Makan"
+            desc="Atur pengingat makan & rencana menu harian ginjal."
+            cta="Atur Menu"
+          />
+          <FeatureCard
+            href="/dashboard/chatbot"
+            icon={<MessageCircle className="h-6 w-6" />}
+            title="HGM AI Chatbot"
+            desc="Tanya apa pun tentang kesehatan ginjal."
+            cta="Mulai Chat"
           />
           <FeatureCard
             href="/academy"
