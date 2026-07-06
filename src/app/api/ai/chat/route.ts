@@ -95,7 +95,7 @@ export async function POST(request: Request) {
     // Try OpenRouter first, then OpenAI
     const llmKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
     const llmBaseUrl = process.env.OPENROUTER_BASE_URL || "https://api.openai.com/v1";
-    const llmModel = process.env.OPENROUTER_MODEL || (process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "openai/gpt-4o-mini");
+    const llmModel = process.env.OPENROUTER_MODEL || (process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "openrouter/free");
 
     if (llmKey) {
       try {
